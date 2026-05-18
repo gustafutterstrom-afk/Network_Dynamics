@@ -1,7 +1,7 @@
 import numpy as np
 
 # States: 0=o, 1=a, 2=b, 3=c, 4=d
-
+# a) 
 Lambda = np.array([
     [0,   2/5, 1/5, 0,   0],
     [0,   0,   3/4, 1/4, 0],
@@ -10,8 +10,13 @@ Lambda = np.array([
     [0,   1/3, 0,   1/3, 0]
 ])
 
+<<<<<<< HEAD
 def simulate_return_time():
     state = 0      # start in node a
+=======
+def simulate_return_time(start,stop):
+    state = start     # start in node a
+>>>>>>> 831216b3067e48ce722e176842fd5cb1cb6c7fda
     t = 0.0
 
     # first jump out of a
@@ -29,10 +34,17 @@ def simulate_return_time():
         state = np.random.choice(5, p=probs)
 
         # stop when we return to a
+<<<<<<< HEAD
         if state == 4:
             return t
+=======
+        if state == stop:
+            return t 
+>>>>>>> 831216b3067e48ce722e176842fd5cb1cb6c7fda
 
+#simulate_return_time(start=1,stop=1)
 N = 100000
+<<<<<<< HEAD
 #times = [simulate_return_time() for _ in range(N)]
 
 #print("Average return time:", np.mean(times))
@@ -84,3 +96,17 @@ for i in range(n):
 E = np.linalg.solve(A, b)
 
 print("E_o[T_d] =", E[0])
+=======
+#times = [simulate_return_time(1,1) for _ in range(N)]
+#print("Average return time:", np.mean(times))
+# used in b) kind of
+w = np.sum(Lambda, axis=1)
+P = np.linalg.inv(np.diag(w))@Lambda
+print(P)
+
+#c) 
+simulate_return_time(0,4)
+N = 100000
+times = [simulate_return_time(0,4) for _ in range(N)]
+print("Average return time:", np.mean(times))
+>>>>>>> 831216b3067e48ce722e176842fd5cb1cb6c7fda
