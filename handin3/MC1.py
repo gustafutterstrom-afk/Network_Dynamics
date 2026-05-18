@@ -13,10 +13,9 @@ Lambda = np.array([
 ])
 
 def simulate_return_time(start,stop):
-    state = start     # start in node a
+    state = start 
     t = 0.0
 
-    # first jump out of a
     while True:
 
         rates = Lambda[state]
@@ -30,7 +29,7 @@ def simulate_return_time(start,stop):
         probs = rates / r
         state = np.random.choice(5, p=probs)
 
-        # stop when we return to a
+        # stop when we return to stop
         if state == stop:
             return t
 
@@ -70,102 +69,77 @@ E = np.linalg.solve(A, b)
 
 print("E_o[T_d] =", E[0])
 
+N = 10  # number of nodes
+T = 1000 # simulation time
 
-N = 10                  # Number of nodes
-T = 1000                # Maximum simulation time
-
-# Colors, 0 = red,1 = green
+#colors, 0 = red,1 = green
 X = np.zeros(N, dtype=int)
-
-# Graph
+# graph
 G = nx.path_graph(N)
-
-# Adjacency matrix
-W = nx.to_numpy_array(G)
 
 # Store potential values
 U = []
 
-# Node positions for plotting
-#pos = {i: (i, 0) for i in range(N)}
+# needed for plotting 
+pos = {i: (i, 0) for i in range(N)}
 
-# =========================
-# Simulation
-# =========================
 plt.figure(figsize=(10, 6))
 
-for t in range(1, T + 1):
+for t in range(1, T):
+    # noise
+    n = t / 100
 
-    # Inverse noise parameter
-    eta = t / 100
-
-    # Random node wakes up
+    # node wakes up
     i = random.randint(0, N - 1)
 
-    # Find neighbors
+    # neighbors
     neighbors = list(G.neighbors(i))
 
-    # -------------------------
-    # Compute costs
-    # -------------------------
+    # Costs 
     cost_red = 0
     cost_green = 0
 
     for j in neighbors:
-
         # Cost if node i chooses red
         if X[j] == 0:
             cost_red += 1
-
-        # Cost if node i chooses green
+        #Cost if node i chooses green
         if X[j] == 1:
             cost_green += 1
 
-    # -------------------------
-    # Gibbs probabilities
-    # -------------------------
-    p_red = np.exp(-eta * cost_red)
-    p_green = np.exp(-eta * cost_green)
+    # probability 
+    p_red = np.exp(-n * cost_red)
+    p_green = np.exp(-n * cost_green)
 
-    Z = p_red + p_green
-
+    Z = p_red + p_green # Normalization term
     p_red /= Z
     p_green /= Z
 
-    # -------------------------
-    # Sample new color
-    # -------------------------
+    # pick a r.v between 0,1
     r = random.random()
 
+    # doing the simulation 
     if r < p_red:
         X[i] = 0
     else:
         X[i] = 1
-
-    # =========================
-    # Compute potential
-    # =========================
+    # Potential function 
     potential = 0
 
-    for (u, v) in G.edges():
+    for (u, v) in G.edges(): # looping over each node-pair
         if X[u] == X[v]:
-            potential += 1
+            potential += 1 # each edges is calcualted one time
 
     U.append(potential)
 
-    # =========================
-    # Animation
-    # =========================
-    plt.clf()
-
-    # ---- Graph plot ----
+    # Animation 
+    plt.clf() # just plotting one window  
     plt.subplot(2, 1, 1)
-
     node_colors = ['red' if c == 0 else 'green' for c in X]
 
     nx.draw(
         G,
-        #pos,
+        pos,
         with_labels=True,
         node_color=node_colors,
         node_size=700,
@@ -173,17 +147,13 @@ for t in range(1, T + 1):
     )
 
     plt.title(f"Distributed Graph Coloring (t = {t})")
-
-    # ---- Potential plot ----
+    #Potential 
     plt.subplot(2, 1, 2)
-
     plt.plot(U, linewidth=2)
-
     plt.xlabel("Time")
     plt.ylabel("Potential U(t)")
     plt.title("Potential Function")
     plt.grid(True)
-
     plt.tight_layout()
     plt.pause(0.02)
 
@@ -193,3 +163,4 @@ for t in range(1, T + 1):
         break
 
 plt.show()
+print(potential)
