@@ -27,10 +27,10 @@ for i in range(B.shape[1]):
 
 #print(W)
 #G = nx.DiGraph(W, capacity=cap)
-shortestp = nx.shortest_path(G, source=0, target=16)
-shortest = nx.shortest_path_length(G, source=0, target=16) #a
-#print(shortest)
-#print(shortestp)
+shortestp = nx.shortest_path(G, source=0, target=16, weight='weight')
+shortest = nx.shortest_path_length(G, source=0, target=16, weight='weight') #a
+print(shortest)
+print(shortestp)
 
 mflow, dict = nx.maximum_flow(G, 0, 16) #b
 print(mflow)
@@ -40,29 +40,85 @@ print(mu) #c
 
 
 v = np.zeros(B.shape[0])
-v[0] = 22447
-v[-1] = -22447
+v[0] = mu[0]
+v[16] = -mu[0]
 fe = cv.Variable(B.shape[1])
-# 2. Define Constraints
-constraints = [
-    B @ fe == v,
-    fe >= 0,
-    fe <= cap
-]
 
-# SAFE convex expression
-cost = cv.sum(
-    cv.multiply(
-        le * cap,
-        cv.inv_pos(1 - cv.multiply(fe, 1 / cap)) - 1
-    )
-)
+constraints = [B @ fe == v, fe >= 0, fe <= cap]
+
+cost = cv.sum(cv.multiply(le * cap, cv.inv_pos(1 - cv.multiply(fe, 1 / cap)) - 1))
+
+objective = cv.Minimize(cost)
+
+problem = cv.Problem(objective, constraints)
+
+#print(problem.solve())
+#print(fe.value)
+#print(problem.status) #d
+
+fstar=fe.value
+
+
+f0 = cv.Variable(B.shape[1])
+
+constraints = [B @ f0 == v, f0 >= 0, f0 <= cap]
+
+cost = cv.sum(cv.multiply(cv.multiply(-le,cap),cv.log(1-f0/cap)))
+
+objective = cv.Minimize(cost)
+
+problem = cv.Problem(objective, constraints)
+
+#print(problem.solve())
+#print(f0.value)
+#print(problem.status) #e
+
+fw = cv.Variable(B.shape[1])
+
+constraints = [B @ fw == v, fw >= 0, fw <= cap]
+
+cost = cv.sum(cv.multiply(cv.multiply(-le,cap),cv.log(1-fw/cap)) + cv.multiply(fw, cv.multiply(fstar, cv.multiply(le, cv.multiply(cv.inv_pos(cap), cv.inv_pos(cv.square(1-cv.multiply(fstar, cv.inv_pos(cap)))))))))
+
+objective = cv.Minimize(cost)
+
+problem = cv.Problem(objective, constraints)
+
+#print(problem.solve())
+#print(fw.value)
+#print(problem.status) #f
+
+
+fe2 = cv.Variable(B.shape[1])
+
+constraints = [B @ fe2 == v, fe2 >= 0, fe2 <= cap]
+
+cost = cv.sum(cv.multiply(le * cap, cv.inv_pos(1 - cv.multiply(fe2, 1 / cap)) - 1)-cv.multiply(fe2,le))
 
 objective = cv.Minimize(cost)
 
 problem = cv.Problem(objective, constraints)
 
 print(problem.solve())
-print(problem.status)
+print(fe2.value)
+print(problem.status) #g
+
+f2star = fe2.value
+
+fw2 = cv.Variable(B.shape[1])
+
+constraints = [B @ fw2 == v, fw2 >= 0, fw2 <= cap]
+
+cost = cv.sum(cv.multiply(cv.multiply(-le,cap),cv.log(1-fw2/cap)) + cv.multiply(fw2, cv.multiply(f2star, cv.multiply(le, cv.multiply(cv.inv_pos(cap), cv.inv_pos(cv.square(1-cv.multiply(f2star, cv.inv_pos(cap))))))))-cv.multiply(fw2,le))
+
+objective = cv.Minimize(cost)
+
+problem = cv.Problem(objective, constraints)
+
+print(problem.solve())
+print(fw2.value)
+print(problem.status) #g contd
+
+
+
 
 
