@@ -33,10 +33,10 @@ def simulate_return_time(start,stop):
         if state == stop:
             return t
 
-#simulate_return_time(start=1,stop=1)
-#N = 100000
-#times = [simulate_return_time(1,1) for _ in range(N)]
-#print("Average return time:", np.mean(times))
+simulate_return_time(start=1,stop=1)
+N = 100000
+times = [simulate_return_time(1,1) for _ in range(N)]
+print("Average return time:", np.mean(times))
 
 #c) 
 #simulate_return_time(start=0,stop=4)
@@ -164,3 +164,6 @@ for t in range(1, T):
 
 plt.show()
 print(potential)
+
+W0 = np.load('handin3/data/wifi.mat')
+W = nx.Graph(W0)
