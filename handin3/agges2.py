@@ -1,7 +1,7 @@
 import numpy as np
+from scipy.linalg import null_space
 
-# States: 0=o, 1=a, 2=b, 3=c, 4=d
-
+# Generator (your Lambda matrix)
 Lambda = np.array([
     [0,   2/5, 1/5, 0,   0],
     [0,   0,   3/4, 1/4, 0],
@@ -10,77 +10,18 @@ Lambda = np.array([
     [0,   1/3, 0,   1/3, 0]
 ])
 
-def simulate_return_time():
-    state = 0      # start in node a
-    t = 0.0
+# Exit rates ω
+omega = np.sum(Lambda, axis=1)
 
-    # first jump out of a
-    while True:
+# Laplacian: L = diag(ω) - Λ
+L = np.diag(omega) - Lambda
 
-        rates = Lambda[state]
-        r = np.sum(rates)
+# Solve L^T π = 0
+ns = null_space(L.T)
 
-        # waiting time
-        dt = -np.log(np.random.rand()) / r
-        t += dt
+# Extract stationary vector and normalize
+pi = ns[:, 0]
+pi = pi / np.sum(pi)
 
-        # choose next state
-        probs = rates / r
-        state = np.random.choice(5, p=probs)
-
-        # stop when we return to a
-        if state == 4:
-            return t
-
-N = 100000
-#times = [simulate_return_time() for _ in range(N)]
-
-#print("Average return time:", np.mean(times))
-
-#P = Lambda = np.array([
- #   [0,   2/5, 1/5, 0,   0],
- #   [0,   0,   3/4, 1/4, 0],
-  #  [1/2, 0,   0,   1/2, 0],
-  #  [0,   0,   1/3, 0,   2/3],
-  #  [0,   1/3, 0,   1/3, 0]
-#])
-
-#D = np.sum(P, axis=1)
-#print(D)
-#D = np.diag(D)
-#P=np.linalg.inv(D)@P
-#print(P)
-import numpy as np
-
-# Lambda matrix (given)
-Lambda = np.array([
-    [0,   2/5, 1/5, 0,   0],
-    [0,   0,   3/4, 1/4, 0],
-    [1/2, 0,   0,   1/2, 0],
-    [0,   0,   1/3, 0,   2/3],
-    [0,   1/3, 0,   1/3, 0]
-])
-
-n = 5
-target = 4  # d
-
-# compute omega (exit rates)
-omega = Lambda.sum(axis=1)
-
-# build linear system A x = b
-A = np.zeros((n, n))
-b = np.zeros(n)
-
-for i in range(n):
-    if i == target:
-        A[i, i] = 1
-        b[i] = 0
-    else:
-        A[i, i] = omega[i]
-        for j in range(n):
-            A[i, j] -= Lambda[i, j]
-        b[i] = 1
-
-E = np.linalg.solve(A, b)
-
-print("E_o[T_d] =", E[0])
+print("Stationary distribution π:")
+print(pi)
